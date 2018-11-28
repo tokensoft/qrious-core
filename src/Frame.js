@@ -488,10 +488,14 @@ var Frame = Nevis.extend(function(options) {
         break
       case Uint8Array:
         maxLength = length
+        stringBuffer = this._stringBuffer = ecc.slice();
         for (i = 0; i < length; i++) {
           ecc[i] = this._value[i]
           stringBuffer[i] = this._value[i]
         }
+        break
+      default:
+        throw new Error('unsupported value type')
     }
 
     // Fill to end with pad pattern.
