@@ -55,8 +55,8 @@ var Frame = Nevis.extend(function(options) {
     dataBlock = ErrorCorrection.BLOCKS[index++];
     eccBlock = ErrorCorrection.BLOCKS[index];
 
+    // calculating the number of data code words (bytes) that will fit in this QR code version and error correction level
     index = (dataBlock * (neccBlock1 + neccBlock2)) + neccBlock2 - 3 + (this._version <= 9);
-
     if (valueLength <= index) {
       break;
     }
@@ -427,56 +427,71 @@ var Frame = Nevis.extend(function(options) {
   },
 
   _convertBitStream: function(length) {
-    var bit, i;
+    var bit, i, stringBuffer;
     var ecc = this._ecc;
     var version = this._version;
-
-    // Convert string to bit stream. 8-bit data to QR-coded 8-bit data (numeric, alphanumeric, or kanji not supported).
-    for (i = 0; i < length; i++) {
-      ecc[i] = this._value.charCodeAt(i);
-    }
-
-    var stringBuffer = this._stringBuffer = ecc.slice();
     var maxLength = this._calculateMaxLength();
 
-    if (length >= maxLength - 2) {
-      length = maxLength - 2;
+    console.log('*** converting bitstream ***', {ecc: ecc, length: length, maxLength: maxLength, version: version, value: this._value})
 
-      if (version > 9) {
-        length--;
-      }
-    }
+    switch (this._value.constructor) {
+      case String:
+        // Convert string to bit stream. 8-bit data to QR-coded 8-bit data (numeric, alphanumeric, or kanji not supported).
+        for (i = 0; i < length; i++) {
+          ecc[i] = this._value.charCodeAt(i);
+        }
 
-    // Shift and re-pack to insert length prefix.
-    var index = length;
+        console.log('*** filled ecc and initial strinbuffer ***', {ecc: ecc});
 
-    if (version > 9) {
-      stringBuffer[index + 2] = 0;
-      stringBuffer[index + 3] = 0;
+        stringBuffer = this._stringBuffer = ecc.slice();
 
-      while (index--) {
-        bit = stringBuffer[index];
+        if (length >= maxLength - 2) {
+          length = maxLength - 2;
 
-        stringBuffer[index + 3] |= 255 & (bit << 4);
-        stringBuffer[index + 2] = bit >> 4;
-      }
+          if (version > 9) {
+            length--;
+          }
+        }
 
-      stringBuffer[2] |= 255 & (length << 4);
-      stringBuffer[1] = length >> 4;
-      stringBuffer[0] = 0x40 | (length >> 12);
-    } else {
-      stringBuffer[index + 1] = 0;
-      stringBuffer[index + 2] = 0;
+        // Shift and re-pack to insert length prefix.
+        var index = length;
 
-      while (index--) {
-        bit = stringBuffer[index];
+        if (version > 9) {
+          stringBuffer[index + 2] = 0;
+          stringBuffer[index + 3] = 0;
 
-        stringBuffer[index + 2] |= 255 & (bit << 4);
-        stringBuffer[index + 1] = bit >> 4;
-      }
+          while (index--) {
+            bit = stringBuffer[index];
 
-      stringBuffer[1] |= 255 & (length << 4);
-      stringBuffer[0] = 0x40 | (length >> 4);
+            stringBuffer[index + 3] |= 255 & (bit << 4);
+            stringBuffer[index + 2] = bit >> 4;
+          }
+
+          stringBuffer[2] |= 255 & (length << 4);
+          stringBuffer[1] = length >> 4;
+          stringBuffer[0] = 0x40 | (length >> 12);
+        } else {
+          stringBuffer[index + 1] = 0;
+          stringBuffer[index + 2] = 0;
+
+          while (index--) {
+            bit = stringBuffer[index];
+
+            stringBuffer[index + 2] |= 255 & (bit << 4);
+            stringBuffer[index + 1] = bit >> 4;
+          }
+
+          stringBuffer[1] |= 255 & (length << 4);
+          stringBuffer[0] = 0x40 | (length >> 4);
+        }
+        console.log('*** string buffer after shifting and repacking ***', {stringBuffer: stringBuffer})
+        break
+      case Uint8Array:
+        maxLength = length
+        for (i = 0; i < length; i++) {
+          ecc[i] = this._value[i]
+          stringBuffer[i] = this._value[i]
+        }
     }
 
     // Fill to end with pad pattern.
@@ -486,6 +501,8 @@ var Frame = Nevis.extend(function(options) {
       stringBuffer[index++] = 0xec;
       stringBuffer[index++] = 0x11;
     }
+
+    console.log('*** string buffer after padding', {stringBuffer: stringBuffer})
   },
 
   _getBadness: function(length) {

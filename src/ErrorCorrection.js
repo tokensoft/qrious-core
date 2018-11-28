@@ -33,10 +33,14 @@ var Nevis = require('nevis/lite');
 var ErrorCorrection = Nevis.extend(null, {
 
   /**
-   * The error correction blocks.
+   * The error correction blocks. (large columns represent L, M, Q, H error correction levels)
    *
-   * There are four elements per version. The first two indicate the number of blocks, then the data width, and finally
-   * the ECC width.
+   * There are four elements per version.
+   * - number of blocks in group 1
+   * - number of blocks in group 2
+   * - number of data code words (bytes) in each group 1 block
+   *   (add one to get number of data code words in each group 2 block)
+   * - ecc code words per block
    *
    * @public
    * @static
