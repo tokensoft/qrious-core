@@ -432,7 +432,7 @@ var Frame = Nevis.extend(function(options) {
     var version = this._version;
     var maxLength = this._calculateMaxLength();
 
-    console.log('*** converting bitstream ***', {ecc: ecc, length: length, maxLength: maxLength, version: version, value: this._value})
+    console.log('*** converting bitstream ***', {ecc: ecc.slice(), length: length, maxLength: maxLength, version: version, value: this._value.slice()})
 
     switch (this._value.constructor) {
       case String:
@@ -441,7 +441,7 @@ var Frame = Nevis.extend(function(options) {
           ecc[i] = this._value.charCodeAt(i);
         }
 
-        console.log('*** filled ecc and initial strinbuffer ***', {ecc: ecc});
+        console.log('*** filled ecc and initial strinbuffer ***', {ecc: ecc.slice()});
 
         stringBuffer = this._stringBuffer = ecc.slice();
 
@@ -484,10 +484,9 @@ var Frame = Nevis.extend(function(options) {
           stringBuffer[1] |= 255 & (length << 4);
           stringBuffer[0] = 0x40 | (length >> 4);
         }
-        console.log('*** string buffer after shifting and repacking ***', {stringBuffer: stringBuffer})
+        console.log('*** string buffer after shifting and repacking ***', {stringBuffer: stringBuffer.slice()})
         break
       case Uint8Array:
-        maxLength = length
         stringBuffer = this._stringBuffer = ecc.slice();
         for (i = 0; i < length; i++) {
           ecc[i] = this._value[i]
@@ -506,7 +505,7 @@ var Frame = Nevis.extend(function(options) {
       stringBuffer[index++] = 0x11;
     }
 
-    console.log('*** string buffer after padding', {stringBuffer: stringBuffer})
+    console.log('*** string buffer after padding', {stringBuffer: stringBuffer.slice()})
   },
 
   _getBadness: function(length) {
