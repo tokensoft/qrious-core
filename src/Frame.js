@@ -505,6 +505,41 @@ var Frame = Nevis.extend(function(options) {
 
         console.log('*** length after magic ***', {length})
 
+        console.log('*** filled ecc and initial stringbuffer ***', {ecc: ecc.slice()});
+
+        // Shift and re-pack to insert length prefix.
+        var index = length;
+
+        if (version > 9) {
+          stringBuffer[index + 2] = 0;
+          stringBuffer[index + 3] = 0;
+
+          while (index--) {
+            bit = stringBuffer[index];
+
+            stringBuffer[index + 3] |= 255 & (bit << 4);
+            stringBuffer[index + 2] = bit >> 4;
+          }
+
+          stringBuffer[2] |= 255 & (length << 4);
+          stringBuffer[1] = length >> 4;
+          stringBuffer[0] = 0x40 | (length >> 12);
+        } else {
+          stringBuffer[index + 1] = 0;
+          stringBuffer[index + 2] = 0;
+
+          while (index--) {
+            bit = stringBuffer[index];
+
+            stringBuffer[index + 2] |= 255 & (bit << 4);
+            stringBuffer[index + 1] = bit >> 4;
+          }
+
+          stringBuffer[1] |= 255 & (length << 4);
+          stringBuffer[0] = 0x40 | (length >> 4);
+        }
+        console.log('*** string buffer after shifting and repacking ***', {stringBuffer: stringBuffer.slice()})
+
         break
       default:
         throw new Error('unsupported value type')
