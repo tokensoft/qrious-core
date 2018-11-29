@@ -441,7 +441,7 @@ var Frame = Nevis.extend(function(options) {
           ecc[i] = this._value.charCodeAt(i);
         }
 
-        console.log('*** filled ecc and initial strinbuffer ***', {ecc: ecc.slice()});
+        console.log('*** filled ecc and initial stringbuffer ***', {ecc: ecc.slice()});
 
         stringBuffer = this._stringBuffer = ecc.slice();
 
@@ -492,6 +492,19 @@ var Frame = Nevis.extend(function(options) {
           ecc[i] = this._value[i]
           stringBuffer[i] = this._value[i]
         }
+
+        console.log('*** length before magic ***', {length})
+
+        if (length >= maxLength - 2) {
+          length = maxLength - 2;
+
+          if (version > 9) {
+            length--;
+          }
+        }
+
+        console.log('*** length after magic ***', {length})
+
         break
       default:
         throw new Error('unsupported value type')
