@@ -540,7 +540,7 @@ var Frame = Nevis.extend(function(options) {
           }
 
           stringBuffer[1] |= 255 & (length << 4);
-          stringBuffer[0] = 0x20 | (length >> 4); // byte mode not kanjii mode
+          stringBuffer[0] = 0x40 | (length >> 4);
         }
         console.log('*** string buffer after shifting and repacking ***', {stringBuffer: stringBuffer.slice(), binString: this._toBinString(stringBuffer.slice())})
 
