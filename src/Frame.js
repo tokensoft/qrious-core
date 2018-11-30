@@ -426,6 +426,10 @@ var Frame = Nevis.extend(function(options) {
     return bad;
   },
 
+  _toBinString: function(str) {
+    return str.map(x => x.toString(2).padStart(8, '0'))
+  },
+
   _convertBitStream: function(length) {
     var bit, i, stringBuffer;
     var ecc = this._ecc;
@@ -484,7 +488,7 @@ var Frame = Nevis.extend(function(options) {
           stringBuffer[1] |= 255 & (length << 4);
           stringBuffer[0] = 0x40 | (length >> 4);
         }
-        console.log('*** string buffer after shifting and repacking ***', {stringBuffer: stringBuffer.slice()})
+        console.log('*** string buffer after shifting and repacking ***', {stringBuffer: stringBuffer.slice(), binString: this._toBinString(stringBuffer.slice())})
         break
       case Uint8Array:
         stringBuffer = this._stringBuffer = ecc.slice();
@@ -505,7 +509,7 @@ var Frame = Nevis.extend(function(options) {
 
         console.log('*** length after magic ***', {length})
 
-        console.log('*** filled ecc and initial stringbuffer ***', {ecc: ecc.slice()});
+        console.log('*** filled ecc and initial stringbuffer ***', {ecc: ecc.slice(), binString: this._toBinString(stringBuffer.slice())});
 
         // Shift and re-pack to insert length prefix.
         var index = length;
@@ -538,7 +542,7 @@ var Frame = Nevis.extend(function(options) {
           stringBuffer[1] |= 255 & (length << 4);
           stringBuffer[0] = 0x20 | (length >> 4); // byte mode not kanjii mode
         }
-        console.log('*** string buffer after shifting and repacking ***', {stringBuffer: stringBuffer.slice()})
+        console.log('*** string buffer after shifting and repacking ***', {stringBuffer: stringBuffer.slice(), binString: this._toBinString(stringBuffer.slice())})
 
         break
       default:
@@ -553,7 +557,7 @@ var Frame = Nevis.extend(function(options) {
       stringBuffer[index++] = 0x11;
     }
 
-    console.log('*** string buffer after padding', {stringBuffer: stringBuffer.slice()})
+    console.log('*** string buffer after padding', {stringBuffer: stringBuffer.slice(), binString: this._toBinString(stringBuffer.slice())})
   },
 
   _getBadness: function(length) {
