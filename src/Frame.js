@@ -431,12 +431,10 @@ var Frame = Nevis.extend(function(options) {
   },
 
   _convertBitStream: function(length) {
-    var bit, i, stringBuffer;
+    var bit, i;
     var ecc = this._ecc;
     var version = this._version;
     var maxLength = this._calculateMaxLength();
-
-    console.log('*** converting bitstream ***', {ecc: ecc.slice(), length: length, maxLength: maxLength, version: version, value: this._value.slice()})
 
     switch (this._value.constructor) {
       case String:
@@ -444,109 +442,56 @@ var Frame = Nevis.extend(function(options) {
         for (i = 0; i < length; i++) {
           ecc[i] = this._value.charCodeAt(i);
         }
-
-        console.log('*** filled ecc and initial stringbuffer ***', {ecc: ecc.slice()});
-
-        stringBuffer = this._stringBuffer = ecc.slice();
-
-        if (length >= maxLength - 2) {
-          length = maxLength - 2;
-
-          if (version > 9) {
-            length--;
-          }
-        }
-
-        // Shift and re-pack to insert length prefix.
-        var index = length;
-
-        if (version > 9) {
-          stringBuffer[index + 2] = 0;
-          stringBuffer[index + 3] = 0;
-
-          while (index--) {
-            bit = stringBuffer[index];
-
-            stringBuffer[index + 3] |= 255 & (bit << 4);
-            stringBuffer[index + 2] = bit >> 4;
-          }
-
-          stringBuffer[2] |= 255 & (length << 4);
-          stringBuffer[1] = length >> 4;
-          stringBuffer[0] = 0x40 | (length >> 12);
-        } else {
-          stringBuffer[index + 1] = 0;
-          stringBuffer[index + 2] = 0;
-
-          while (index--) {
-            bit = stringBuffer[index];
-
-            stringBuffer[index + 2] |= 255 & (bit << 4);
-            stringBuffer[index + 1] = bit >> 4;
-          }
-
-          stringBuffer[1] |= 255 & (length << 4);
-          stringBuffer[0] = 0x40 | (length >> 4);
-        }
-        console.log('*** string buffer after shifting and repacking ***', {stringBuffer: stringBuffer.slice(), binString: this._toBinString(stringBuffer.slice())})
-        break
+        break;
       case Uint8Array:
-        stringBuffer = this._stringBuffer = ecc.slice();
         for (i = 0; i < length; i++) {
-          ecc[i] = this._value[i]
-          stringBuffer[i] = this._value[i]
+          ecc[i] = this._value[i];
         }
-
-        console.log('*** length before magic ***', {length})
-
-        if (length >= maxLength - 2) {
-          length = maxLength - 2;
-
-          if (version > 9) {
-            length--;
-          }
-        }
-
-        console.log('*** length after magic ***', {length})
-
-        console.log('*** filled ecc and initial stringbuffer ***', {ecc: ecc.slice(), binString: this._toBinString(stringBuffer.slice())});
-
-        // Shift and re-pack to insert length prefix.
-        var index = length;
-
-        if (version > 9) {
-          stringBuffer[index + 2] = 0;
-          stringBuffer[index + 3] = 0;
-
-          while (index--) {
-            bit = stringBuffer[index];
-
-            stringBuffer[index + 3] |= 255 & (bit << 4);
-            stringBuffer[index + 2] = bit >> 4;
-          }
-
-          stringBuffer[2] |= 255 & (length << 4);
-          stringBuffer[1] = length >> 4;
-          stringBuffer[0] = 0x40 | (length >> 12);
-        } else {
-          stringBuffer[index + 1] = 0;
-          stringBuffer[index + 2] = 0;
-
-          while (index--) {
-            bit = stringBuffer[index];
-
-            stringBuffer[index + 2] |= 255 & (bit << 4);
-            stringBuffer[index + 1] = bit >> 4;
-          }
-
-          stringBuffer[1] |= 255 & (length << 4);
-          stringBuffer[0] = 0x40 | (length >> 4);
-        }
-        console.log('*** string buffer after shifting and repacking ***', {stringBuffer: stringBuffer.slice(), binString: this._toBinString(stringBuffer.slice())})
-
-        break
+        break;
       default:
-        throw new Error('unsupported value type')
+        throw new Error('unsupported value type: must be String or Uint8Array');
+    }
+
+    var stringBuffer = this._stringBuffer = ecc.slice();
+
+    if (length >= maxLength - 2) {
+      length = maxLength - 2;
+
+      if (version > 9) {
+        length--;
+      }
+    }
+
+    // Shift and re-pack to insert length prefix.
+    var index = length;
+
+    if (version > 9) {
+      stringBuffer[index + 2] = 0;
+      stringBuffer[index + 3] = 0;
+
+      while (index--) {
+        bit = stringBuffer[index];
+
+        stringBuffer[index + 3] |= 255 & (bit << 4);
+        stringBuffer[index + 2] = bit >> 4;
+      }
+
+      stringBuffer[2] |= 255 & (length << 4);
+      stringBuffer[1] = length >> 4;
+      stringBuffer[0] = 0x40 | (length >> 12);
+    } else {
+      stringBuffer[index + 1] = 0;
+      stringBuffer[index + 2] = 0;
+
+      while (index--) {
+        bit = stringBuffer[index];
+
+        stringBuffer[index + 2] |= 255 & (bit << 4);
+        stringBuffer[index + 1] = bit >> 4;
+      }
+
+      stringBuffer[1] |= 255 & (length << 4);
+      stringBuffer[0] = 0x40 | (length >> 4);
     }
 
     // Fill to end with pad pattern.
@@ -556,8 +501,6 @@ var Frame = Nevis.extend(function(options) {
       stringBuffer[index++] = 0xec;
       stringBuffer[index++] = 0x11;
     }
-
-    console.log('*** string buffer after padding', {stringBuffer: stringBuffer.slice(), binString: this._toBinString(stringBuffer.slice())})
   },
 
   _getBadness: function(length) {
